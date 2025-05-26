@@ -6,77 +6,89 @@
     <title>房屋心電圖 - 結構健康監測概念</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+            font-family: 'Inter', 'Noto Sans TC', 'Roboto', sans-serif;
         }
         .chart-container {
             position: relative;
-            height: 60vh; /* Responsive height */
-            width: 100%;   /* Responsive width */
-            max-width: 800px; /* Max width to maintain aspect ratio on large screens */
+            height: 40vh; /* 略微調整圖表高度 */
+            width: 100%;
+            max-width: 800px;
             margin: auto;
+            margin-bottom: 1rem;
         }
-        /* Custom styling for buttons and status messages */
         .btn-simulate {
-            background-color: #3b82f6; /* Tailwind blue-500 */
+            background-color: #3b82f6;
             transition: background-color 0.3s ease;
         }
         .btn-simulate:hover {
-            background-color: #2563eb; /* Tailwind blue-600 */
+            background-color: #2563eb;
         }
         .status-normal {
-            background-color: #d1fae5; /* Tailwind green-100 */
-            color: #065f46; /* Tailwind green-800 */
-            border-left-color: #10b981; /* Tailwind green-500 */
+            background-color: #d1fae5; color: #065f46; border-left-color: #10b981;
         }
         .status-warning {
-            background-color: #ffedd5; /* Tailwind orange-100 */
-            color: #9a3412; /* Tailwind orange-800 */
-            border-left-color: #f97316; /* Tailwind orange-500 */
+            background-color: #ffedd5; color: #9a3412; border-left-color: #f97316;
         }
         .status-danger {
-            background-color: #fee2e2; /* Tailwind red-100 */
-            color: #991b1b; /* Tailwind red-800 */
-            border-left-color: #ef4444; /* Tailwind red-500 */
+            background-color: #fee2e2; color: #991b1b; border-left-color: #ef4444;
+        }
+        .lang-btn {
+            padding: 0.5rem 1rem;
+            margin: 0 0.25rem;
+            border-radius: 0.375rem;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .lang-btn-active {
+            background-color: #3b82f6; /* Tailwind blue-500 */
+            color: white;
+        }
+        .lang-btn-inactive {
+            background-color: #e5e7eb; /* Tailwind gray-200 */
+            color: #374151; /* Tailwind gray-700 */
+        }
+        .lang-btn-inactive:hover {
+            background-color: #d1d5db; /* Tailwind gray-300 */
         }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 flex flex-col items-center justify-center min-h-screen p-4">
-    <div class="w-full max-w-3xl flex justify-end mb-4">
-        <div class="bg-white shadow rounded-lg p-2">
-            <a href="index.html" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">中文</a>
-            <a href="index_en.html" class="px-3 py-1 text-gray-700 rounded hover:bg-gray-200">English</a>
-        </div>
-    </div>
 
     <div class="bg-white shadow-xl rounded-lg p-6 md:p-8 w-full max-w-3xl">
+        <div class="text-center mb-4">
+            <button id="lang-zh-TW" class="lang-btn lang-btn-active" data-lang="zh-TW">繁體中文</button>
+            <button id="lang-zh-CN" class="lang-btn lang-btn-inactive" data-lang="zh-CN">简体中文</button>
+            <button id="lang-en" class="lang-btn lang-btn-inactive" data-lang="en">English</button>
+        </div>
+
         <header class="text-center mb-6">
-            <h1 class="text-3xl font-bold text-sky-700">房屋心電圖</h1>
-            <p class="text-lg text-slate-600 mt-1">結構健康監測概念模擬</p>
-            <p class="text-sm text-slate-500 mt-2">利用過時iPhone作為監測工具，將其粘在牆上並保持供電，記錄地震加速度數據。通過傅利葉轉換分析頻域信息，比較多次地震數據以檢測結構勁度變化，若有顯著下降則通知用戶進行檢查。</p>
-            <div class="mt-3 text-xs text-slate-500 bg-slate-50 p-3 rounded">
-                <strong>模擬案例</strong>：監測一棟3層樓住宅（理論固有頻率3-5 Hz）。地震發生時，iPhone與台中氣象站同步記錄數據。氣象站頻譜峰值在0.5 Hz和2 Hz，iPhone頻譜峰值在0.5 Hz、2 Hz和4 Hz，傳遞函數確認4 Hz為房屋固有頻率。第一次地震頻率4.0 Hz，第二次3.8 Hz（下降5%），觸發警告建議檢查結構。
-            </div>
+            <h1 id="appTitle" class="text-3xl font-bold text-sky-700">房屋心電圖</h1>
+            <p id="appSubtitle" class="text-lg text-slate-600 mt-1">結構健康監測概念模擬</p>
         </header>
 
         <main>
             <section class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-center">
                 <div class="bg-sky-50 p-4 rounded-lg shadow">
-                    <h2 class="text-md font-semibold text-sky-600">基準結構頻率</h2>
+                    <h2 id="baselineFreqTitle" class="text-md font-semibold text-sky-600">基準結構頻率</h2>
                     <p id="baselineFrequency" class="text-2xl font-bold text-sky-800">5.00 Hz</p>
                 </div>
                 <div class="bg-emerald-50 p-4 rounded-lg shadow">
-                    <h2 class="text-md font-semibold text-emerald-600">目前結構頻率</h2>
+                    <h2 id="currentFreqTitle" class="text-md font-semibold text-emerald-600">目前結構頻率</h2>
                     <p id="currentFrequency" class="text-2xl font-bold text-emerald-800">5.00 Hz</p>
                 </div>
             </section>
 
             <section class="mb-6">
-                <h2 class="text-xl font-semibold text-center mb-3 text-slate-700">即時振動模擬</h2>
+                <h2 id="timeDomainTitle" class="text-xl font-semibold text-center mb-3 text-slate-700">即時振動模擬 (時域)</h2>
                 <div class="chart-container bg-slate-50 p-2 rounded-lg shadow-inner">
                     <canvas id="vibrationChart"></canvas>
+                </div>
+
+                <h2 id="freqDomainTitle" class="text-xl font-semibold text-center mb-3 text-slate-700">模擬頻譜分析 (頻域)</h2>
+                <div class="chart-container bg-slate-50 p-2 rounded-lg shadow-inner">
+                    <canvas id="frequencySpectrumChart"></canvas>
                 </div>
             </section>
 
@@ -92,174 +104,456 @@
         </main>
 
         <footer class="text-center mt-8 text-sm text-slate-500">
-            <p>&copy; 2025 結構監測App概念展示。僅供模擬用途。</p>
-            <p class="mt-1">此應用僅為概念演示，不代表真實結構監測，不應用於實際建築分析或安全評估。</p>
+            <p id="footerText">&copy; 2025 結構監測App概念展示。僅供模擬用途。</p>
         </footer>
     </div>
 
     <script>
-        // Chart.js 初始化和配置
-        const ctx = document.getElementById('vibrationChart').getContext('2d');
+        // 語言包
+        const translations = {
+            "zh-TW": {
+                "appTitle": "房屋心電圖",
+                "appSubtitle": "結構健康監測概念模擬",
+                "baselineFreqTitle": "基準結構頻率",
+                "currentFreqTitle": "目前結構頻率",
+                "timeDomainTitle": "即時振動模擬 (時域)",
+                "freqDomainTitle": "模擬頻譜分析 (頻域)",
+                "simulateEarthquake": "模擬地震事件",
+                "simulatingEarthquake": "地震模擬中...",
+                "statusNormal": "系統正常，結構穩定。",
+                "statusInitial": "系統正常，結構穩定。將iPhone固定在牆上並保持充電以進行監測。",
+                "statusStrongVibration": "偵測到強烈震動！正在分析結構響應...",
+                "statusAnalysisDone": "結構分析完成",
+                "statusStable": "目前狀況穩定。",
+                "statusSignificantDrop": "顯著下降",
+                "statusRecommendCheck": "！建議立即進行專業結構檢查。",
+                "statusDrop": "下降",
+                "statusRecommendObserve": "。建議密切觀察，考慮預約檢查。",
+                "statusSlightDrop": "輕微下降",
+                "statusContinueMonitor": "。目前穩定，請持續監測。",
+                "statusMinorChange": "變化至",
+                "statusMonitorContinuously": "。結構輕微變化，持續監測。",
+                "footerText": "&copy; 2025 結構監測App概念展示。僅供模擬用途。",
+                "chartVibrationLabel": "結構振動幅度",
+                "chartVibrationYAxis": "振動幅度 (模擬單位)",
+                "chartSpectrumLabelCurrent": "目前結構頻率",
+                "chartSpectrumLabelPrevious": "震前結構頻率",
+                "chartSpectrumYAxis": "相對幅度",
+                "chartSpectrumXAxis": "頻率 (Hz)",
+                "hzUnit": "Hz"
+            },
+            "zh-CN": {
+                "appTitle": "房屋心电图",
+                "appSubtitle": "结构健康监测概念模拟",
+                "baselineFreqTitle": "基准结构频率",
+                "currentFreqTitle": "当前结构频率",
+                "timeDomainTitle": "实时振动模拟 (时域)",
+                "freqDomainTitle": "模拟频谱分析 (频域)",
+                "simulateEarthquake": "模拟地震事件",
+                "simulatingEarthquake": "地震模拟中...",
+                "statusNormal": "系统正常，结构稳定。",
+                "statusInitial": "系统正常，结构稳定。将iPhone固定在墙上并保持充电以进行监测。",
+                "statusStrongVibration": "侦测到强烈震动！正在分析结构响应...",
+                "statusAnalysisDone": "结构分析完成",
+                "statusStable": "当前状况稳定。",
+                "statusSignificantDrop": "显著下降",
+                "statusRecommendCheck": "！建议立即进行专业结构检查。",
+                "statusDrop": "下降",
+                "statusRecommendObserve": "。建议密切观察，考虑预约检查。",
+                "statusSlightDrop": "轻微下降",
+                "statusContinueMonitor": "。当前稳定，请持续监测。",
+                "statusMinorChange": "变化至",
+                "statusMonitorContinuously": "。结构轻微变化，持续监测。",
+                "footerText": "&copy; 2025 结构监测App概念展示。仅供模拟用途。",
+                "chartVibrationLabel": "结构振动幅度",
+                "chartVibrationYAxis": "振动幅度 (模拟单位)",
+                "chartSpectrumLabelCurrent": "当前结构频率",
+                "chartSpectrumLabelPrevious": "震前结构频率",
+                "chartSpectrumYAxis": "相对幅度",
+                "chartSpectrumXAxis": "频率 (Hz)",
+                "hzUnit": "Hz"
+            },
+            "en": {
+                "appTitle": "House ECG",
+                "appSubtitle": "Structural Health Monitoring Concept",
+                "baselineFreqTitle": "Baseline Structural Frequency",
+                "currentFreqTitle": "Current Structural Frequency",
+                "timeDomainTitle": "Real-time Vibration (Time Domain)",
+                "freqDomainTitle": "Simulated Spectrum Analysis (Frequency Domain)",
+                "simulateEarthquake": "Simulate Earthquake Event",
+                "simulatingEarthquake": "Simulating Earthquake...",
+                "statusNormal": "System normal, structure stable.",
+                "statusInitial": "System normal, structure stable. Secure iPhone to wall and keep charged for monitoring.",
+                "statusStrongVibration": "Strong vibration detected! Analyzing structural response...",
+                "statusAnalysisDone": "Structural analysis complete",
+                "statusStable": "Current condition stable.",
+                "statusSignificantDrop": "significantly dropped",
+                "statusRecommendCheck": "! Immediate professional inspection recommended.",
+                "statusDrop": "dropped",
+                "statusRecommendObserve": ". Close observation and consider scheduling an inspection.",
+                "statusSlightDrop": "slightly dropped",
+                "statusContinueMonitor": ". Currently stable, please continue monitoring.",
+                "statusMinorChange": "changed to",
+                "statusMonitorContinuously": ". Minor structural change, continue monitoring.",
+                "footerText": "&copy; 2025 Structural Monitoring App Concept. For simulation purposes only.",
+                "chartVibrationLabel": "Structural Vibration Amplitude",
+                "chartVibrationYAxis": "Vibration Amplitude (Simulated Units)",
+                "chartSpectrumLabelCurrent": "Current Structural Frequency",
+                "chartSpectrumLabelPrevious": "Pre-Quake Structural Frequency",
+                "chartSpectrumYAxis": "Relative Amplitude",
+                "chartSpectrumXAxis": "Frequency (Hz)",
+                "hzUnit": "Hz"
+            }
+        };
+
+        let currentLang = 'zh-TW'; // 預設語言
+
+        // DOM 元素
+        const appTitle = document.getElementById('appTitle');
+        const appSubtitle = document.getElementById('appSubtitle');
+        const baselineFreqTitle = document.getElementById('baselineFreqTitle');
+        const currentFreqTitle = document.getElementById('currentFreqTitle');
+        const timeDomainTitle = document.getElementById('timeDomainTitle');
+        const freqDomainTitle = document.getElementById('freqDomainTitle');
+        const simulateButton = document.getElementById('simulateEarthquake');
+        const statusMessage = document.getElementById('statusMessage');
+        const footerText = document.getElementById('footerText');
+
+        const baselineFrequencyDisplay = document.getElementById('baselineFrequency');
+        const currentFrequencyDisplay = document.getElementById('currentFrequency');
+        const statusMessageContainer = document.getElementById('statusMessageContainer');
+        
+        // 語言按鈕
+        const langButtons = {
+            'zh-TW': document.getElementById('lang-zh-TW'),
+            'zh-CN': document.getElementById('lang-zh-CN'),
+            'en': document.getElementById('lang-en')
+        };
+
+        // 初始狀態變數
+        let baselineFrequency = 5.00; 
+        let currentFrequency = 5.00; 
+        let frequencyBeforeLastEarthquake = null; 
+        let isEarthquakeSimulating = false;
+        let vibrationIntervalId;
+        const MAX_FREQUENCY_DISPLAY = 10; 
+        const FREQUENCY_RESOLUTION = 0.1;
+
+        // --- 時域振動圖表 (Vibration Chart) ---
+        const vibrationCtx = document.getElementById('vibrationChart').getContext('2d');
         let vibrationChart;
-        const chartData = {
-            labels: Array(50).fill().map((_, i) => i), // X軸標籤 (時間點)
+        const vibrationChartData = {
+            labels: Array(50).fill().map((_, i) => i),
             datasets: [{
-                label: '結構振動幅度',
-                data: Array(50).fill(0), // Y軸數據 (振動幅度)
-                borderColor: 'rgb(59, 130, 246)', // Tailwind blue-500
+                label: translations[currentLang].chartVibrationLabel,
+                data: Array(50).fill(0),
+                borderColor: 'rgb(59, 130, 246)', 
                 borderWidth: 2,
-                tension: 0.4, // 使線條平滑
-                pointRadius: 0, // 不顯示數據點
+                tension: 0.4,
+                pointRadius: 0,
                 fill: false
             }]
         };
-        const chartConfig = {
+        const vibrationChartConfig = {
             type: 'line',
-            data: chartData,
+            data: vibrationChartData,
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                animation: {
-                    duration: 200 // 較快的動畫以模擬即時性
-                },
+                animation: { duration: 200 },
                 scales: {
-                    y: {
-                        beginAtZero: false,
-                        min: -1.5, // 振幅範圍
-                        max: 1.5,
-                        title: {
-                            display: true,
-                            text: '振動幅度 (模擬單位)'
-                        }
-                    },
-                    x: {
-                        display: false // 不顯示X軸標籤，使其更像心電圖
-                    }
+                    y: { beginAtZero: false, min: -1.5, max: 1.5, title: { display: true, text: translations[currentLang].chartVibrationYAxis }},
+                    x: { display: false }
+                },
+                plugins: { legend: { display: false } }
+            }
+        };
+        vibrationChart = new Chart(vibrationCtx, vibrationChartConfig);
+
+        // --- 頻域頻譜圖表 (Frequency Spectrum Chart) ---
+        const spectrumCtx = document.getElementById('frequencySpectrumChart').getContext('2d');
+        let frequencySpectrumChart;
+        const spectrumLabels = [];
+        for (let f = 0; f <= MAX_FREQUENCY_DISPLAY; f += FREQUENCY_RESOLUTION) {
+            spectrumLabels.push(f.toFixed(1));
+        }
+        const spectrumChartData = {
+            labels: spectrumLabels,
+            datasets: [
+                {
+                    label: translations[currentLang].chartSpectrumLabelCurrent,
+                    data: Array(spectrumLabels.length).fill(0),
+                    backgroundColor: 'rgba(75, 192, 192, 0.7)', 
+                    borderColor: 'rgb(75, 192, 192)',
+                    borderWidth: 1,
+                    barPercentage: 0.9,
+                    categoryPercentage: 0.9,
+                    order: 1 
+                },
+                {
+                    label: translations[currentLang].chartSpectrumLabelPrevious,
+                    data: Array(spectrumLabels.length).fill(0),
+                    backgroundColor: 'rgba(203, 213, 225, 0.7)', 
+                    borderColor: 'rgb(100, 116, 139)',       
+                    borderWidth: 1,
+                    barPercentage: 0.9,
+                    categoryPercentage: 0.9,
+                    order: 2
+                }
+            ]
+        };
+        const spectrumChartConfig = {
+            type: 'bar',
+            data: spectrumChartData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 500 },
+                scales: {
+                    y: { beginAtZero: true, min: 0, max: 1.2, title: { display: true, text: translations[currentLang].chartSpectrumYAxis } },
+                    x: { title: { display: true, text: translations[currentLang].chartSpectrumXAxis } }
                 },
                 plugins: {
-                    legend: {
-                        display: false // 不顯示圖例
-                    }
+                    legend: { display: true, position: 'top' },
+                    tooltip: { mode: 'index', intersect: false }
                 }
             }
         };
-        vibrationChart = new Chart(ctx, chartConfig);
+        frequencySpectrumChart = new Chart(spectrumCtx, spectrumChartConfig);
 
-        // DOM 元素
-        const baselineFrequencyDisplay = document.getElementById('baselineFrequency');
-        const currentFrequencyDisplay = document.getElementById('currentFrequency');
-        const simulateButton = document.getElementById('simulateEarthquake');
-        const statusMessageContainer = document.getElementById('statusMessageContainer');
-        const statusMessage = document.getElementById('statusMessage');
+        // 更新語言
+        function setLanguage(lang) {
+            currentLang = lang;
+            const tr = translations[lang];
 
-        // 初始狀態變數
-        let baselineFrequency = 5.00; // Hz
-        let currentFrequency = 5.00; // Hz
-        let isEarthquakeSimulating = false;
-        let intervalId;
+            document.documentElement.lang = lang; // 更新HTML lang屬性
+            appTitle.textContent = tr.appTitle;
+            appSubtitle.textContent = tr.appSubtitle;
+            baselineFreqTitle.textContent = tr.baselineFreqTitle;
+            currentFreqTitle.textContent = tr.currentFreqTitle;
+            timeDomainTitle.textContent = tr.timeDomainTitle;
+            freqDomainTitle.textContent = tr.freqDomainTitle;
+            simulateButton.textContent = isEarthquakeSimulating ? tr.simulatingEarthquake : tr.simulateEarthquake;
+            // statusMessage 的更新會在 checkStructuralIntegrity 中處理
+            footerText.innerHTML = tr.footerText; // 使用innerHTML以保留版權符號
+
+            // 更新圖表標題和標籤
+            vibrationChart.data.datasets[0].label = tr.chartVibrationLabel;
+            vibrationChart.options.scales.y.title.text = tr.chartVibrationYAxis;
+            vibrationChart.update('none');
+
+            frequencySpectrumChart.options.scales.y.title.text = tr.chartSpectrumYAxis;
+            frequencySpectrumChart.options.scales.x.title.text = tr.chartSpectrumXAxis;
+            // 頻譜圖的dataset label會在updateSpectrumChartData中動態更新
+            updateSpectrumChartData(); //確保頻譜圖標籤也更新
+            
+            // 更新按鈕樣式
+            for (const key in langButtons) {
+                if (key === lang) {
+                    langButtons[key].classList.remove('lang-btn-inactive');
+                    langButtons[key].classList.add('lang-btn-active');
+                } else {
+                    langButtons[key].classList.remove('lang-btn-active');
+                    langButtons[key].classList.add('lang-btn-inactive');
+                }
+            }
+            // 重新檢查結構完整性以更新狀態訊息語言
+            checkStructuralIntegrity(frequencyBeforeLastEarthquake, true);
+        }
+
+        Object.keys(langButtons).forEach(langKey => {
+            langButtons[langKey].addEventListener('click', () => {
+                setLanguage(langKey);
+            });
+        });
+
 
         // 更新頻率顯示
         function updateFrequencyDisplays() {
-            baselineFrequencyDisplay.textContent = `${baselineFrequency.toFixed(2)} Hz`;
-            currentFrequencyDisplay.textContent = `${currentFrequency.toFixed(2)} Hz`;
+            const tr = translations[currentLang];
+            baselineFrequencyDisplay.textContent = `${baselineFrequency.toFixed(2)} ${tr.hzUnit}`;
+            currentFrequencyDisplay.textContent = `${currentFrequency.toFixed(2)} ${tr.hzUnit}`;
         }
 
         // 更新狀態訊息
-        function updateStatusMessage(message, type) {
+        function updateStatusMessage(messageKey, type, freqValues = {}) {
+            const tr = translations[currentLang];
+            let message = tr[messageKey] || messageKey; // 如果找不到key，直接顯示key
+
+            // 替換佔位符
+            message = message.replace('{currentFreq}', freqValues.currentFreq ? freqValues.currentFreq.toFixed(2) : '')
+                             .replace('{changePercent}', freqValues.changePercent ? freqValues.changePercent.toFixed(1) : '')
+                             .replace('{prevFreq}', freqValues.prevFreq ? freqValues.prevFreq.toFixed(2) : '');
+            
             statusMessage.textContent = message;
             statusMessageContainer.className = `p-4 rounded-lg border-l-4 min-h-[60px] flex items-center justify-center status-${type}`;
         }
         
-        // 模擬振動數據更新
-        function updateChartData() {
-            const newData = chartData.datasets[0].data;
-            newData.shift(); // 移除最舊的數據點
-
-            let amplitude = 0.5; // 正常振幅
+        // 模擬時域振動數據更新
+        function updateVibrationChartData() {
+            const newData = vibrationChartData.datasets[0].data;
+            newData.shift(); 
+            let amplitude = 0.5; 
             if (isEarthquakeSimulating) {
-                amplitude = 1.2 + Math.random() * 0.6 - 0.3; // 地震時振幅加大且不規則
+                amplitude = 1.0 + Math.random() * 0.8 - 0.4;
             } else {
-                 // 根據當前頻率調整振動的「密集度」
-                 // 這是一個非常簡化的模擬，實際頻率變化影響的是振動的週期
-                const randomFactor = (Math.random() - 0.5) * 2; // -1 to 1
+                const randomFactor = (Math.random() - 0.5) * 2; 
                 amplitude = (currentFrequency / baselineFrequency) * 0.3 * randomFactor + (Math.random() - 0.5) * 0.1;
             }
-            
-            newData.push(amplitude); // 加入新的數據點
-            vibrationChart.update();
+            newData.push(amplitude); 
+            vibrationChart.update('none');
+        }
+
+        // 輔助函數：為給定頻率生成頻譜峰值數據
+        function generateSpectrumPeakData(targetFrequency, peakValue = 1.0) {
+            const peakData = Array(spectrumLabels.length).fill(0);
+            if (targetFrequency === null || targetFrequency === undefined) return peakData;
+            let peakIndex = -1;
+            let minDiff = Infinity;
+            for (let i = 0; i < spectrumLabels.length; i++) {
+                const freq = parseFloat(spectrumLabels[i]);
+                const diff = Math.abs(freq - targetFrequency);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    peakIndex = i;
+                }
+            }
+            if (peakIndex !== -1) {
+                peakData[peakIndex] = peakValue;
+                if (peakIndex > 0) peakData[peakIndex - 1] = peakValue * (0.5 + Math.random() * 0.2);
+                if (peakIndex < peakData.length - 1) peakData[peakIndex + 1] = peakValue * (0.5 + Math.random() * 0.2);
+                if (peakIndex > 1) peakData[peakIndex - 2] = peakValue * (0.2 + Math.random() * 0.1);
+                if (peakIndex < peakData.length - 2) peakData[peakIndex + 2] = peakValue * (0.2 + Math.random() * 0.1);
+            }
+            for(let i=0; i < peakData.length; i++) {
+                if (peakData[i] < 0.01) { 
+                    peakData[i] += Math.random() * 0.03;
+                }
+            }
+            return peakData;
+        }
+
+        // 模擬頻域頻譜數據更新
+        function updateSpectrumChartData() {
+            const tr = translations[currentLang];
+            frequencySpectrumChart.data.datasets[0].data = generateSpectrumPeakData(currentFrequency);
+            frequencySpectrumChart.data.datasets[0].label = `${tr.chartSpectrumLabelCurrent} (${currentFrequency.toFixed(2)} ${tr.hzUnit})`;
+
+            if (frequencyBeforeLastEarthquake !== null && frequencyBeforeLastEarthquake !== currentFrequency) {
+                frequencySpectrumChart.data.datasets[1].data = generateSpectrumPeakData(frequencyBeforeLastEarthquake, 0.8);
+                frequencySpectrumChart.data.datasets[1].label = `${tr.chartSpectrumLabelPrevious} (${frequencyBeforeLastEarthquake.toFixed(2)} ${tr.hzUnit})`;
+            } else {
+                frequencySpectrumChart.data.datasets[1].data = generateSpectrumPeakData(null); 
+                frequencySpectrumChart.data.datasets[1].label = tr.chartSpectrumLabelPrevious;
+            }
+            frequencySpectrumChart.update();
         }
 
         // 開始/停止模擬振動
         function startVibrationSimulation() {
-            if (intervalId) clearInterval(intervalId);
-            // 根據當前頻率調整更新速度，頻率越高，波形越密集，更新應越快
-            // 這是一個簡化模擬，實際影響的是波形的週期
-            let updateInterval = 200 / (currentFrequency / 2.5); // 基礎更新間隔200ms，頻率越高間隔越短
-            updateInterval = Math.max(50, Math.min(500, updateInterval)); // 限制在50ms到500ms之間
-            intervalId = setInterval(updateChartData, updateInterval);
+            if (vibrationIntervalId) clearInterval(vibrationIntervalId);
+            let updateInterval = 200 / (currentFrequency / 2.5); 
+            updateInterval = Math.max(50, Math.min(500, updateInterval)); 
+            vibrationIntervalId = setInterval(updateVibrationChartData, updateInterval);
+            updateSpectrumChartData(); 
         }
-
 
         // 模擬地震事件
         simulateButton.addEventListener('click', () => {
-            if (isEarthquakeSimulating) return; // 防止重複觸發
-
+            if (isEarthquakeSimulating) return; 
+            const tr = translations[currentLang];
             isEarthquakeSimulating = true;
             simulateButton.disabled = true;
-            simulateButton.textContent = '地震模擬中...';
-            updateStatusMessage('偵測到強烈震動！正在分析結構響應...', 'warning');
+            simulateButton.textContent = tr.simulatingEarthquake;
+            updateStatusMessage('statusStrongVibration', 'warning');
             
-            // 模擬地震持續時間
-            let earthquakeDuration = Math.random() * 3000 + 2000; // 2-5秒
-            const originalFrequency = currentFrequency;
-
-            // 地震期間，圖表振幅加大
-            const earthquakeInterval = setInterval(updateChartData, 100); // 地震時圖表更新快一些
+            frequencyBeforeLastEarthquake = currentFrequency;
+            let earthquakeDuration = Math.random() * 2000 + 1500; 
+            const originalFrequencyForThisEarthquake = currentFrequency; 
+            const earthquakeVibrationInterval = setInterval(updateVibrationChartData, 80); 
 
             setTimeout(() => {
-                clearInterval(earthquakeInterval); // 停止地震時的快速更新
+                clearInterval(earthquakeVibrationInterval); 
                 isEarthquakeSimulating = false;
                 simulateButton.disabled = false;
-                simulateButton.textContent = '模擬地震事件';
+                simulateButton.textContent = tr.simulateEarthquake;
 
-                // 模擬結構勁度變化 (頻率可能下降)
-                // 有70%的機率結構受損，頻率下降
-                if (Math.random() < 0.7) {
-                    const frequencyDropPercentage = Math.random() * 0.15 + 0.05; // 下降 5% - 20%
-                    currentFrequency = originalFrequency * (1 - frequencyDropPercentage);
+                if (Math.random() < 0.75) { 
+                    const frequencyDropPercentage = Math.random() * 0.20 + 0.08; 
+                    currentFrequency = originalFrequencyForThisEarthquake * (1 - frequencyDropPercentage);
                 } else {
-                    // 30% 機率結構未受損或輕微變化
-                    currentFrequency = originalFrequency * (1 - Math.random() * 0.03); // 最多下降3%
+                    currentFrequency = originalFrequencyForThisEarthquake * (1 - Math.random() * 0.04); 
                 }
-                currentFrequency = Math.max(0.1, currentFrequency); // 頻率不會小於0.1Hz
+                currentFrequency = Math.max(1.0, currentFrequency); 
+                currentFrequency = Math.min(MAX_FREQUENCY_DISPLAY - FREQUENCY_RESOLUTION, currentFrequency); 
                 
                 updateFrequencyDisplays();
-                checkStructuralIntegrity();
-                startVibrationSimulation(); // 恢復正常振動模擬，但可能以新的頻率
-
+                checkStructuralIntegrity(originalFrequencyForThisEarthquake); 
+                startVibrationSimulation(); 
             }, earthquakeDuration);
         });
 
         // 檢查結構完整性並更新狀態
-        function checkStructuralIntegrity() {
-            const frequencyChangePercentage = ((baselineFrequency - currentFrequency) / baselineFrequency) * 100;
+        function checkStructuralIntegrity(frequencyBeforeDamage, languageUpdateOnly = false) {
+            const tr = translations[currentLang];
+            if (!languageUpdateOnly && isEarthquakeSimulating) return; // 地震模擬中不更新狀態訊息，除了語言切換
 
-            if (frequencyChangePercentage > 15) {
-                updateStatusMessage(`警告：結構頻率顯著下降 ${frequencyChangePercentage.toFixed(1)}%！建議立即進行專業結構檢查。`, 'danger');
-            } else if (frequencyChangePercentage > 7) {
-                updateStatusMessage(`注意：結構頻率下降 ${frequencyChangePercentage.toFixed(1)}%。建議密切觀察，考慮預約檢查。`, 'warning');
-            } else if (frequencyChangePercentage > 2) {
-                 updateStatusMessage(`結構頻率輕微下降 ${frequencyChangePercentage.toFixed(1)}%。目前穩定，請持續監測。`, 'normal');
+            const referenceFrequency = frequencyBeforeDamage !== undefined && frequencyBeforeDamage !== null ? frequencyBeforeDamage : baselineFrequency;
+            const freqChangePercent = ((referenceFrequency - currentFrequency) / referenceFrequency) * 100;
+            const freqValues = {
+                currentFreq: currentFrequency,
+                prevFreq: referenceFrequency,
+                changePercent: freqChangePercent
+            };
+
+            let statusKey = 'statusAnalysisDone'; // 預設是分析完成
+            let statusType = 'normal';
+            let messageSuffix = ` (${freqValues.currentFreq.toFixed(2)} ${tr.hzUnit}). ${tr.statusStable}`;
+
+            if (frequencyBeforeDamage !== undefined && frequencyBeforeDamage !== null) { // 只有在地震後才判斷損傷
+                messageSuffix = ` (${freqValues.currentFreq.toFixed(2)} ${tr.hzUnit}, ${tr.statusDrop} ${freqValues.changePercent.toFixed(1)}%).`;
+                if (freqChangePercent > 15) {
+                    statusKey = 'statusSignificantDrop';
+                    messageSuffix += tr.statusRecommendCheck;
+                    statusType = 'danger';
+                } else if (freqChangePercent > 7) {
+                    statusKey = 'statusDrop';
+                    messageSuffix += tr.statusRecommendObserve;
+                    statusType = 'warning';
+                } else if (freqChangePercent > 2) {
+                    statusKey = 'statusSlightDrop';
+                    messageSuffix += tr.statusContinueMonitor;
+                    statusType = 'normal';
+                } else if (currentFrequency < referenceFrequency) { // 變化不大但仍下降
+                    statusKey = 'statusMinorChange';
+                    messageSuffix = ` ${freqValues.currentFreq.toFixed(2)} ${tr.hzUnit}. ${tr.statusMonitorContinuously}`;
+                    statusType = 'normal';
+                } else { // 幾乎沒變或上升
+                     messageSuffix = ` (${freqValues.currentFreq.toFixed(2)} ${tr.hzUnit}). ${tr.statusStable}`;
+                }
+            } else if (!isEarthquakeSimulating) { // 初始狀態或非地震後的語言更新
+                 statusKey = 'statusInitial';
+                 messageSuffix = ''; // statusInitial 已經是完整句子
             }
-            else {
-                updateStatusMessage('結構分析完成。目前狀況穩定。', 'normal');
+
+
+            let fullMessage = tr[statusKey] || statusKey;
+            if (frequencyBeforeDamage !== undefined && frequencyBeforeDamage !== null && statusKey !== 'statusAnalysisDone') {
+                 fullMessage = `${tr.statusAnalysisDone}: ${tr.statusFrom} ${freqValues.prevFreq.toFixed(2)} ${tr.hzUnit} ${fullMessage}`;
             }
+            fullMessage += messageSuffix;
+            
+            // 修正 statusMessage 的更新方式
+            statusMessage.textContent = fullMessage;
+            statusMessageContainer.className = `p-4 rounded-lg border-l-4 min-h-[60px] flex items-center justify-center status-${statusType}`;
+
         }
-
+        
         // 初始化
+        setLanguage(currentLang); //確保初始加載時使用預設語言
         updateFrequencyDisplays();
         startVibrationSimulation();
-        updateStatusMessage('系統正常，結構穩定。將iPhone固定在牆上並保持充電以進行監測。', 'normal');
+        // updateStatusMessage('statusInitial', 'normal'); // 改由 setLanguage -> checkStructuralIntegrity 處理初始訊息
 
     </script>
 </body>
