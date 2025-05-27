@@ -1,6 +1,6 @@
 # House ECG - Structural Health Monitoring Concept
 
-## 房屋心電圖 - 結構健康監測概念
+## 房屋心電圖 - 結構健康監測概念 張渝江土木技師 美國AI工程鑑定學會理事長
 
 ### Overview / 概述
 
