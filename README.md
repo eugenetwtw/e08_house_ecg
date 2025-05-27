@@ -1,4 +1,4 @@
-# House ECG - Structural Health Monitoring Concept
+# House ECG - Structural Health Monitoring Concept Yu Jiang Chang, Executive Director, AI forensic engineering institute
 
 ## 房屋心電圖 - 結構健康監測概念 張渝江土木技師 美國AI工程鑑定學會理事長
 
